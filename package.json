@@ -1,0 +1,70 @@
+{
+  "name": "archilogic-kiosk-example",
+  "version": "1.0.0",
+  "description": "A wall-mounted floor plan kiosk built with the Archilogic Floor Plan SDK: search, wayfinding, people finder and live theming.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/archilogic-com/kiosk-app.git"
+  },
+  "homepage": "https://github.com/archilogic-com/kiosk-app#readme",
+  "bugs": {
+    "url": "https://github.com/archilogic-com/kiosk-app/issues"
+  },
+  "keywords": [
+    "archilogic",
+    "floor-plan",
+    "kiosk",
+    "wayfinding",
+    "indoor-maps"
+  ],
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite dev --port 5173",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint",
+    "format": "prettier --check .",
+    "check": "prettier --write . && eslint --fix"
+  },
+  "dependencies": {
+    "@archilogic/floor-plan-sdk": "0.0.0-snapshot-20260309115106",
+    "@tailwindcss/vite": "^4.1.18",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "lucide-react": "^0.561.0",
+    "radix-ui": "^1.4.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwind-merge": "^3.0.2",
+    "tailwindcss": "^4.1.18",
+    "tw-animate-css": "^1.3.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.2.0",
+    "@types/node": "^22.10.2",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jsdom": "^27.0.0",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.0.0",
+    "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.0.5"
+  }
+}

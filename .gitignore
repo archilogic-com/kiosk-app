@@ -1,0 +1,17 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+.playwright-cli
+.agents
+
+# Local Netlify folder
+.netlify
+test-results/
+playwright-report/
+blob-report/
+tests/*-snapshots/

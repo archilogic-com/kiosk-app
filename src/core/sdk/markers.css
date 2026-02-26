@@ -1,0 +1,91 @@
+/*
+ * Baseline styling for the markers core draws: route pins and people avatars.
+ *
+ * Deliberately plain so it reads in any host. Colours come from custom
+ * properties the host sets (see the fallbacks), and a host can restyle the
+ * classes outright; the kiosk gives `.kiosk-pin` its glass-panel look.
+ */
+
+.kiosk-pin {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  color: var(--kiosk-pin-text, #111827);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.kiosk-pin--dragging {
+  cursor: grabbing;
+}
+
+.kiosk-pin__text {
+  color: var(--kiosk-pin-muted, #6b7280);
+}
+
+.kiosk-pin__label {
+  font-weight: 500;
+  color: var(--kiosk-pin-text, #111827);
+}
+
+.kiosk-pin__dot {
+  position: relative;
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: var(--kiosk-pin-dot, var(--kiosk-pin-accent, #3b6de0));
+}
+
+.kiosk-pin__dot--pulse::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--kiosk-pin-accent, #3b6de0);
+  animation: kiosk-pin-pulse 2s ease-out infinite;
+}
+
+@keyframes kiosk-pin-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* The wrapper takes the engine's transform; the circle inside is styled. */
+.kiosk-avatar {
+  pointer-events: none;
+}
+
+.kiosk-avatar__circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  font-family: var(--kiosk-avatar-font, inherit);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kiosk-avatar-text, #1f2937);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
+  transition: box-shadow 0.15s ease;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.kiosk-avatar__circle--highlighted {
+  box-shadow:
+    0 0 0 3px var(--kiosk-avatar-ring, rgb(59 109 224 / 0.5)),
+    0 2px 8px rgb(0 0 0 / 0.2);
+}
