@@ -13,6 +13,7 @@ It is a worked example: one complete application rather than a set of snippets, 
 - **Dashboard**: attendance, free meeting rooms, today's events and the weather
 - **Live theming**: an editor over the SDK's theme API, with four presets
 - **Deep links**: `?to=<id>&type=space&directions=1` opens straight on a destination, so a QR code or a calendar invite can point at a room
+- **Any floor**: `?floor=<id>&token=<token>` points the kiosk at another floor without a rebuild
 - **Idle reset**: returns to the dashboard when nobody is using it
 
 ## Running it
@@ -30,11 +31,30 @@ You need an Archilogic account with a floor in it.
 
 1. Create a **publishable access token** at [app.archilogic.com → Settings → Access tokens](https://app.archilogic.com/organization/settings/access-tokens), allowing the domains you will serve from.
 2. Open your floor in the Archilogic dashboard and copy its **floor id** from the URL.
-3. Copy `.env.example` to `.env` and fill both in.
+3. Either pass both in the URL, or copy `.env.example` to `.env` and fill them in to make them the defaults for a build.
 
-A publishable access token is designed to ship in a browser bundle: it is domain-restricted and read-only. It is not a secret, which is why the demo values are committed.
+A publishable access token is designed to ship in a browser bundle: it is domain-restricted and read-only. It is not a secret, which is why the demo values are committed and why it can go in a URL.
 
-To show occupants on workstations, define [custom attributes](https://developers.archilogic.com/space-graph/custom-attributes.html) on your floor's workstation assets and set their `apiFieldName`s in `src/core/config.ts`. Without them everything else still works; the people finder is simply empty.
+#### URL parameters
+
+Every setting resolves from the URL first, then the environment, then the demo floor, so a running kiosk can show any floor without a rebuild:
+
+```
+?floor=<floor id>&token=<publishable access token>
+```
+
+| Parameter             | Environment variable                       | Purpose                                                                                   |
+| --------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `token`               | `VITE_ARCHILOGIC_PUBLISHABLE_ACCESS_TOKEN` | Publishable access token. It must allow the domain the kiosk is served from.              |
+| `floor`               | `VITE_ARCHILOGIC_FLOOR_ID`                 | Floor to show (its default layout).                                                       |
+| `layout`              | `VITE_ARCHILOGIC_LAYOUT_ID`                | One specific layout, used when no floor is given.                                         |
+| `spaceApiUrl`         | `VITE_ARCHILOGIC_SPACE_API_URL`            | Space API for another tenant. From the URL it must be an `https://*.archilogic.com` host. |
+| `occupantAttribute`   | `VITE_ARCHILOGIC_OCCUPANT_ATTRIBUTE`       | `apiFieldName` of the workstation attribute holding the occupant's name.                  |
+| `employeeIdAttribute` | `VITE_ARCHILOGIC_EMPLOYEE_ID_ATTRIBUTE`    | `apiFieldName` of the workstation attribute holding an employee id.                       |
+
+These parameters survive a reload, and links copied from the kiosk keep them, so a shared link opens on the same floor.
+
+To show occupants on workstations, define [custom attributes](https://developers.archilogic.com/space-graph/custom-attributes.html) on your floor's workstation assets and pass their `apiFieldName`s as above. Without them everything else still works; the people finder is simply empty.
 
 ## How it is put together
 

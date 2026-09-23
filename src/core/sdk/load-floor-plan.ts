@@ -1,4 +1,5 @@
 import type { FloorPlanEngine } from '@archilogic/floor-plan-sdk'
+import type { FloorPlanConfig } from '#/core/config'
 import { FLOOR_PLAN_CONFIG } from '#/core/config'
 import { buildFloorPlanTheme } from '#/core/theme/build-theme'
 import type { ViewportInsets } from '#/core/sdk/zoom'
@@ -7,14 +8,23 @@ import { zoomToFloor } from '#/core/sdk/zoom'
 /**
  * Load whichever id is configured. `loadFloorById` renders a floor's default
  * layout and is the common case; `loadLayoutById` targets one specific layout.
+ * The API URL is global to the SDK, so it is set before every load.
  */
-export function loadConfiguredFloor(
+export async function loadConfiguredFloor(
   floorPlan: FloorPlanEngine,
+  {
+    target,
+    publishableAccessToken,
+    spaceApiUrl,
+  }: FloorPlanConfig = FLOOR_PLAN_CONFIG,
 ): Promise<boolean | Error> {
-  const { floorId, layoutId, publishableAccessToken } = FLOOR_PLAN_CONFIG
-  return floorId
-    ? floorPlan.loadFloorById(floorId, { publishableAccessToken })
-    : floorPlan.loadLayoutById(layoutId, { publishableAccessToken })
+  if (spaceApiUrl) {
+    const { setApiUrls } = await import('@archilogic/floor-plan-sdk')
+    setApiUrls({ spaceApiUrl })
+  }
+  return target.kind === 'floor'
+    ? floorPlan.loadFloorById(target.id, { publishableAccessToken })
+    : floorPlan.loadLayoutById(target.id, { publishableAccessToken })
 }
 
 /** How far a load has got, for a UI that shows progress rather than a spinner. */

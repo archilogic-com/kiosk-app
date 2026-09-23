@@ -1,7 +1,7 @@
 import type { FloorPlanEngine, Vector2 } from '@archilogic/floor-plan-sdk'
 import type { Space, Workstation } from '#/core/domain/types'
 import { EXCLUDED_CATEGORIES } from '#/core/domain/types'
-import { WORKSTATION_ATTRIBUTES } from '#/core/config'
+import { FLOOR_PLAN_CONFIG } from '#/core/config'
 import { formatSpaceType } from '#/core/domain/format'
 
 export interface FloorData {
@@ -31,7 +31,10 @@ function attr(attrs: Record<string, unknown>, key: string): string | null {
 }
 
 /** Read the loaded floor into the kiosk's own domain objects. */
-export function extractFloorData(floorPlan: FloorPlanEngine): FloorData {
+export function extractFloorData(
+  floorPlan: FloorPlanEngine,
+  attributes = FLOOR_PLAN_CONFIG.workstationAttributes,
+): FloorData {
   const workstationAssets = floorPlan.getElements({
     select: { id: true, type: true, transform: true, customAttributes: true },
     where: { type: 'element:asset', subCategory: 'workstation' },
@@ -39,13 +42,13 @@ export function extractFloorData(floorPlan: FloorPlanEngine): FloorData {
 
   const workstations: Workstation[] = workstationAssets.map((asset) => {
     const attrs = asset.customAttributes ?? {}
-    const occupantName = attr(attrs, WORKSTATION_ATTRIBUTES.occupantName)
+    const occupantName = attr(attrs, attributes.occupantName)
     return {
       id: asset.id,
       // transform.position is 3D; the plan is the X/Z plane.
       position: [asset.transform.position[0], asset.transform.position[2]],
       occupantName,
-      employeeId: attr(attrs, WORKSTATION_ATTRIBUTES.employeeId),
+      employeeId: attr(attrs, attributes.employeeId),
       available: !occupantName,
     }
   })

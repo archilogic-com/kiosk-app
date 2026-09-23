@@ -1,3 +1,4 @@
+import { CONFIG_PARAMS } from '#/core/config'
 import type { NavigableItem } from '#/core/domain/types'
 
 /**
@@ -33,14 +34,20 @@ export function clearDeepLink(): void {
   window.history.replaceState({}, '', url.pathname + url.search + url.hash)
 }
 
-/** The inverse of `parseDeepLink`: a URL that opens the kiosk on `item`. */
+/**
+ * The inverse of `parseDeepLink`: a URL that opens the kiosk on `item`. Keeps
+ * the params that chose the floor, so the link opens on the same one.
+ */
 export function buildDeepLink(
   item: NavigableItem,
   directionsOpen: boolean,
   base: string = window.location.href,
 ): string {
   const url = new URL(base)
-  url.search = ''
+  const kept = new Set<string>(Object.values(CONFIG_PARAMS))
+  for (const key of [...url.searchParams.keys()]) {
+    if (!kept.has(key)) url.searchParams.delete(key)
+  }
   url.searchParams.set('to', item.data.id)
   url.searchParams.set('type', item.type)
   if (directionsOpen) url.searchParams.set('directions', '1')

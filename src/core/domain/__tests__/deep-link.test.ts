@@ -28,7 +28,7 @@ describe('parseDeepLink', () => {
 })
 
 describe('buildDeepLink', () => {
-  it('round-trips through parseDeepLink and drops any other params', () => {
+  it('round-trips through parseDeepLink and drops unrelated params', () => {
     const url = buildDeepLink(
       {
         type: 'space',
@@ -41,7 +41,7 @@ describe('buildDeepLink', () => {
         },
       },
       true,
-      'https://kiosk.example/?utm=x#top',
+      'https://kiosk.example/?utm=x&to=old#top',
     )
     expect(new URL(url).searchParams.get('utm')).toBeNull()
     expect(parseDeepLink(new URL(url).search)).toEqual({
@@ -49,5 +49,27 @@ describe('buildDeepLink', () => {
       type: 'space',
       directionsOpen: true,
     })
+  })
+
+  it('keeps the params that chose the floor', () => {
+    const url = new URL(
+      buildDeepLink(
+        {
+          type: 'workstation',
+          data: {
+            id: 'ws',
+            position: [0, 0],
+            occupantName: null,
+            employeeId: null,
+            available: true,
+          },
+        },
+        false,
+        'https://kiosk.example/?floor=f1&token=t1&utm=x',
+      ),
+    )
+    expect(url.searchParams.get('floor')).toBe('f1')
+    expect(url.searchParams.get('token')).toBe('t1')
+    expect(url.searchParams.get('utm')).toBeNull()
   })
 })

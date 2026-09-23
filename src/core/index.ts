@@ -53,7 +53,12 @@ export type { DisplayTime } from '#/core/domain/clock'
 export { formatSpaceType, formatWalkingTime } from '#/core/domain/format'
 export { avatarColor, getInitials } from '#/core/domain/avatar'
 export { EXIT_ANIMATION_MS, PANEL, VIEWPORT_INSETS } from '#/core/domain/layout'
-export { FLOOR_PLAN_CONFIG, WORKSTATION_ATTRIBUTES } from '#/core/config'
+export {
+  CONFIG_PARAMS,
+  FLOOR_PLAN_CONFIG,
+  resolveFloorPlanConfig,
+} from '#/core/config'
+export type { FloorPlanConfig, FloorPlanTarget } from '#/core/config'
 
 // Highlighting: state in, node styles out
 export type {
