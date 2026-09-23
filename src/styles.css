@@ -279,7 +279,6 @@ code {
 }
 
 .skeleton {
-  border-radius: 0.375rem;
   background: linear-gradient(
     90deg,
     color-mix(in oklch, currentColor 7%, transparent) 0%,

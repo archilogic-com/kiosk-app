@@ -27,12 +27,15 @@ interface SpaceDetailCardProps {
   space: Space
   isBooked?: boolean
   onBook?: (spaceId: string) => void
+  /** Keep the booking button's space even when this space cannot be booked. */
+  reserveBookingSlot?: boolean
 }
 
 export function SpaceDetailCard({
   space,
   isBooked,
   onBook,
+  reserveBookingSlot = false,
 }: SpaceDetailCardProps) {
   const amenities = demoAmenities(space.category, space.seatCapacity)
   const hasSeats = space.seatCapacity != null && space.seatCapacity > 0
@@ -72,15 +75,17 @@ export function SpaceDetailCard({
           )
         })}
       </div>
-      {isMeetingRoom && (
+      {isMeetingRoom ? (
         <button
           type="button"
           disabled={!isBookable}
           onClick={() => onBook?.(space.id)}
-          className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-9 w-full rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isBookable ? 'Book room' : 'Booked'}
         </button>
+      ) : (
+        reserveBookingSlot && <div className="h-9" aria-hidden="true" />
       )}
     </div>
   )

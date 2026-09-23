@@ -127,8 +127,8 @@ function StatsSkeleton() {
             In Office
           </span>
         </div>
-        <span className="skeleton block h-8 w-14" />
-        <span className="skeleton mt-2 block h-3 w-28" />
+        <span className="skeleton rounded-md block h-8 w-14" />
+        <span className="skeleton rounded-md mt-2 block h-3 w-28" />
       </div>
       <div className="rounded-xl bg-amber-50 px-4 py-4 text-amber-800">
         <div className="mb-2 flex items-center gap-2">
@@ -137,8 +137,8 @@ function StatsSkeleton() {
             Free Rooms
           </span>
         </div>
-        <span className="skeleton block h-8 w-14" />
-        <span className="skeleton mt-2 block h-3 w-28" />
+        <span className="skeleton rounded-md block h-8 w-14" />
+        <span className="skeleton rounded-md mt-2 block h-3 w-28" />
       </div>
     </div>
   )
@@ -163,11 +163,11 @@ function EventsSkeleton() {
         {EVENT_TITLE_WIDTHS.map((width, i) => (
           <li key={i} className="flex items-center gap-3">
             <span className="w-16 shrink-0">
-              <span className="skeleton block h-3.5 w-12" />
+              <span className="skeleton rounded-md block h-3.5 w-12" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className={`skeleton block h-3.5 ${width}`} />
-              <span className="skeleton mt-1.5 block h-3 w-20" />
+              <span className={`skeleton rounded-md block h-3.5 ${width}`} />
+              <span className="skeleton rounded-md mt-1.5 block h-3 w-20" />
             </span>
           </li>
         ))}

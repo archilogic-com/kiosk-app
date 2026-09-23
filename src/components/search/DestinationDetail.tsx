@@ -69,21 +69,21 @@ export function DestinationDetail({
 
   return (
     <section
-      className="floating-panel kiosk-fade-in overflow-hidden"
+      className="floating-panel kiosk-fade-in flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden"
       aria-label={`Directions to ${label}`}
     >
       {/* Back button */}
       <button
         ref={backButtonRef}
         onClick={onBack}
-        className="flex h-12 w-full items-center gap-2 px-5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-[0.98]"
+        className="flex h-12 w-full shrink-0 items-center gap-2 px-5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground active:scale-[0.98]"
       >
         <ArrowLeft className="size-5" aria-hidden="true" />
         Back to search
       </button>
 
       {/* Destination info */}
-      <div className="px-5 pb-5">
+      <div className="shrink-0 px-5 pb-5">
         <div className="flex items-center gap-3">
           {icon}
           <div className="min-w-0 flex-1">
@@ -103,58 +103,73 @@ export function DestinationDetail({
           </div>
         </div>
 
-        {/* Space detail card */}
+        <RouteSummary distance={distance} pathError={pathError} />
+
         {itemSpace && (
           <div className="mt-4">
             <SpaceDetailCard
               space={itemSpace}
               isBooked={bookedSpaceIds?.has(itemSpace.id)}
               onBook={onBook}
+              reserveBookingSlot
             />
-          </div>
-        )}
-
-        {pathError && (
-          <p
-            className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
-            role="status"
-          >
-            {pathError}
-          </p>
-        )}
-
-        {distance != null && (
-          <div className="mt-4 flex items-center gap-3">
-            <div className="rounded-xl bg-primary/10 px-4 py-2">
-              <p className="text-lg font-semibold text-primary">
-                {distance.toFixed(0)}m
-              </p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {formatWalkingTime(distance)}
-            </p>
           </div>
         )}
       </div>
 
-      {/* Copy link + directions */}
-      {distance != null && (
-        <div className="border-t border-border/30 px-5 py-3">
-          <CopyLinkButton
-            item={selectedItem}
-            directionsOpen={directionsExpanded}
-          />
-        </div>
-      )}
-
-      {/* Turn-by-turn directions, collapsible */}
-      {directions.length > 0 && (
+      {!pathError && (
         <DirectionsPanel
           directions={directions}
+          loading={distance == null}
           expanded={directionsExpanded}
           onToggle={() => setDirectionsExpanded(!directionsExpanded)}
+          footer={<CopyLinkButton item={selectedItem} directionsOpen />}
         />
       )}
     </section>
+  )
+}
+
+/**
+ * Distance and walking time, holding their space while the route is still
+ * being computed so the panel does not jump when it arrives.
+ */
+function RouteSummary({
+  distance,
+  pathError,
+}: {
+  distance: number | null
+  pathError: string | null
+}) {
+  if (pathError) {
+    return (
+      <p
+        className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        role="status"
+      >
+        {pathError}
+      </p>
+    )
+  }
+  return (
+    <div className="mt-4 flex items-center gap-3" aria-busy={distance == null}>
+      {distance != null ? (
+        <>
+          <div className="rounded-xl bg-primary/10 px-4 py-2">
+            <p className="text-lg font-semibold text-primary">
+              {distance.toFixed(0)}m
+            </p>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {formatWalkingTime(distance)}
+          </p>
+        </>
+      ) : (
+        <>
+          <span className="skeleton h-11 w-20 rounded-xl" />
+          <span className="skeleton h-4 w-24 rounded-md" />
+        </>
+      )}
+    </div>
   )
 }
