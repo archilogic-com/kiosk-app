@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import type { PreviewSettings } from '#/core/sdk/theme-previews'
 import { generateThemePreviews } from '#/core/sdk/theme-previews'
 
@@ -14,17 +14,14 @@ export function useThemePreviews(
   settings: PreviewSettings,
 ): Record<string, string> {
   const [previews, setPreviews] = useState<Record<string, string>>({})
-  const started = useRef(false)
-  const settingsRef = useRef(settings)
-  useEffect(() => {
-    if (!started.current) settingsRef.current = settings
-  })
+  const generate = useEffectEvent((signal: AbortSignal) =>
+    generateThemePreviews(settings, { signal }),
+  )
 
   useEffect(() => {
-    if (!floorPlanReady || started.current) return
-    started.current = true
+    if (!floorPlanReady) return
     const controller = new AbortController()
-    generateThemePreviews(settingsRef.current, { signal: controller.signal })
+    generate(controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) setPreviews(result)
       })

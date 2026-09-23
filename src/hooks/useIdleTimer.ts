@@ -1,14 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 import { createIdleTimer } from '#/core/sdk/idle-timer'
 
 export function useIdleTimer(onIdle: () => void) {
-  const onIdleRef = useRef(onIdle)
-  useEffect(() => {
-    onIdleRef.current = onIdle
-  }, [onIdle])
+  const fireIdle = useEffectEvent(onIdle)
 
   useEffect(() => {
-    const timer = createIdleTimer(() => onIdleRef.current())
+    const timer = createIdleTimer(fireIdle)
     return () => timer.destroy()
   }, [])
 }

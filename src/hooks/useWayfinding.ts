@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import type { FloorPlanEngine } from '@archilogic/floor-plan-sdk'
+import type { PlacedPoint } from '#/core/domain/state'
 import type {
   RouteState,
   WayfindingCallbacks,
@@ -22,18 +23,21 @@ export function useWayfinding(
   const [route, setRoute] = useState<RouteState>(NO_ROUTE)
   const controllerRef = useRef<WayfindingController | null>(null)
 
-  // Marker drags install long-lived pointer handlers, so the controller reads
-  // callbacks through a ref rather than being rebuilt whenever one changes.
-  const latest = useRef(callbacks)
-  useEffect(() => {
-    latest.current = callbacks
-  })
+  // Marker drags install long-lived pointer handlers, so the controller gets
+  // effect events that always reach the current callbacks rather than being
+  // rebuilt whenever one changes.
+  const onOriginMoved = useEffectEvent((point: PlacedPoint) =>
+    callbacks.onOriginMoved?.(point),
+  )
+  const onDestinationMoved = useEffectEvent((point: PlacedPoint) =>
+    callbacks.onDestinationMoved?.(point),
+  )
 
   useEffect(() => {
     if (!floorPlan) return
     const controller = new WayfindingController(floorPlan, {
-      onOriginMoved: (point) => latest.current.onOriginMoved?.(point),
-      onDestinationMoved: (point) => latest.current.onDestinationMoved?.(point),
+      onOriginMoved,
+      onDestinationMoved,
     })
     controllerRef.current = controller
     const unsubscribe = controller.subscribe(setRoute)

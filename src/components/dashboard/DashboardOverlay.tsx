@@ -44,13 +44,31 @@ export function DashboardOverlay({
   const stats = useDashboardStats(workstations, spaces, bookedSpaceIds)
   const [expandedPanel, setExpandedPanel] = useState<'events' | null>(null)
 
+  // While the events panel is open, every event's space is lightly
+  // highlighted on the map; leaving it by any route clears that again.
+  const openEvents = () => {
+    setExpandedPanel('events')
+    onHighlightSpaces?.(events.flatMap((e) => (e.space ? [e.space.id] : [])))
+  }
+  const clearHighlights = () => {
+    onHighlightSpace?.(null)
+    onHighlightSpaces?.([])
+  }
+  const closeEvents = () => {
+    clearHighlights()
+    setExpandedPanel(null)
+  }
+  const navigateToSpace = (spaceId: string) => {
+    clearHighlights()
+    onNavigateToSpace?.(spaceId)
+  }
+
   if (expandedPanel === 'events') {
     return (
       <EventsDetailPanel
         events={events}
-        onBack={() => setExpandedPanel(null)}
-        onNavigateToSpace={onNavigateToSpace}
-        onHighlightSpaces={onHighlightSpaces}
+        onBack={closeEvents}
+        onNavigateToSpace={onNavigateToSpace && navigateToSpace}
         onHighlightSpace={onHighlightSpace}
         bookedSpaceIds={bookedSpaceIds}
         onBook={onBook}
@@ -74,11 +92,7 @@ export function DashboardOverlay({
       onAttendanceClick={onViewAttendance}
       onFreeRoomsClick={onViewFreeRooms}
     />,
-    <EventsPanel
-      key="events"
-      events={events}
-      onExpand={() => setExpandedPanel('events')}
-    />,
+    <EventsPanel key="events" events={events} onExpand={openEvents} />,
     <WeatherWidget key="weather" weather={MOCK_WEATHER} />,
     <PeopleFinderCompact key="people" onActivate={onActivateWayfinding} />,
   ]

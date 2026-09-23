@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   ArrowLeft,
   Calendar,
@@ -77,7 +77,6 @@ interface EventsDetailPanelProps {
   events: ScheduledEvent[]
   onBack: () => void
   onNavigateToSpace?: (spaceId: string) => void
-  onHighlightSpaces?: (spaceIds: string[]) => void
   onHighlightSpace?: (spaceId: string | null) => void
   bookedSpaceIds?: Set<string>
   onBook?: (spaceId: string) => void
@@ -87,31 +86,17 @@ export function EventsDetailPanel({
   events,
   onBack,
   onNavigateToSpace,
-  onHighlightSpaces,
   onHighlightSpace,
   bookedSpaceIds,
   onBook,
 }: EventsDetailPanelProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Lightly highlight all event spaces on the map when events change
-  const allSpaceIds = events.map((e) => e.space?.id).filter(Boolean) as string[]
-  const allSpaceIdsKey = allSpaceIds.join(',')
-  useEffect(() => {
-    onHighlightSpaces?.(allSpaceIds)
-    return () => onHighlightSpaces?.([])
-  }, [allSpaceIdsKey]) // stable string key avoids array reference churn
-
-  // When selection changes, strongly highlight that space
-  useEffect(() => {
-    const event = events.find((e) => e.id === selectedId)
-    onHighlightSpace?.(event?.space?.id ?? null)
-  }, [selectedId, events, onHighlightSpace])
-
-  const handleBack = () => {
-    onHighlightSpace?.(null)
-    onHighlightSpaces?.([])
-    onBack()
+  // The selected event's space is the one strongly highlighted on the map.
+  const toggleSelected = (event: ScheduledEvent) => {
+    const next = selectedId === event.id ? null : event
+    setSelectedId(next?.id ?? null)
+    onHighlightSpace?.(next?.space?.id ?? null)
   }
 
   return (
@@ -119,7 +104,7 @@ export function EventsDetailPanel({
       {/* Header */}
       <div className="flex items-center gap-3 px-5 pt-4 pb-3">
         <button
-          onClick={handleBack}
+          onClick={onBack}
           className="flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-accent active:scale-95"
         >
           <ArrowLeft
@@ -155,7 +140,7 @@ export function EventsDetailPanel({
               return (
                 <li key={event.id}>
                   <button
-                    onClick={() => setSelectedId(isSelected ? null : event.id)}
+                    onClick={() => toggleSelected(event)}
                     className={`relative w-full rounded-xl text-left transition-all ${
                       isSelected
                         ? 'bg-accent/60 shadow-sm'

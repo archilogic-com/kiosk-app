@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
 import type { KioskAction } from '#/core/domain/state'
 import { groupResults } from '#/core/domain/selectors'
 import type { SearchableItem, Space } from '#/core/domain/types'
@@ -103,22 +103,24 @@ export function SearchPanel({
   })
 
   // Escape steps back out: first out of a detail screen, then out of a search.
+  const stepBack = useEffectEvent((event: KeyboardEvent) => {
+    if (selectedItem) {
+      event.preventDefault()
+      back()
+    } else if (query || categoryFilter) {
+      event.preventDefault()
+      setQuery('')
+      setCategoryFilter(null)
+      searchInputRef.current?.focus()
+    }
+  })
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return
-      if (selectedItem) {
-        event.preventDefault()
-        back()
-      } else if (query || categoryFilter) {
-        event.preventDefault()
-        setQuery('')
-        setCategoryFilter(null)
-        searchInputRef.current?.focus()
-      }
+      if (event.key === 'Escape') stepBack(event)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedItem, query, categoryFilter, back, setQuery, setCategoryFilter])
+  }, [])
 
   if (selectedItem?.type === 'event') {
     return (
