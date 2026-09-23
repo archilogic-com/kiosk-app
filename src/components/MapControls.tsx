@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useEffectEvent, useId, useState } from 'react'
+import type { ReactNode } from 'react'
 import {
   Armchair,
   ChevronDown,
@@ -10,162 +11,116 @@ import {
   Users,
   ZoomIn,
 } from 'lucide-react'
-import { ThemeEditor } from '#/components/ThemeEditor'
-import { cn } from '#/lib/utils'
-import type { ThemeOverrides } from '#/core/theme/defaults'
+import type { LucideIcon } from 'lucide-react'
+import { THEME_PRESETS, generateThemePreviews } from '#/floor-plan/theme'
+import type { LayerSettings, ThemeOverrides } from '#/floor-plan/theme'
+import type { PathStyle } from '#/floor-plan/wayfinding'
+import { Switch, ThemeEditor } from '#/components/ThemeEditor'
 
-interface MapControlsProps {
-  showCategories: boolean
-  showLabels: boolean
+/**
+ * What an operator can change about the plan. Not part of the visitor's
+ * journey, so a reset leaves these alone.
+ */
+export interface MapSettings extends LayerSettings, PathStyle {
   showPeople: boolean
-  showAssets: boolean
-  onShowCategoriesChange: (value: boolean) => void
-  onShowLabelsChange: (value: boolean) => void
-  onShowPeopleChange: (value: boolean) => void
-  onShowAssetsChange: (value: boolean) => void
-  pathSmoothing: number
-  onPathSmoothingChange: (value: number) => void
   zoomOnNavigate: boolean
-  onZoomOnNavigateChange: (value: boolean) => void
-  pathThickness: number
-  onPathThicknessChange: (value: number) => void
-  pathDashed: boolean
-  onPathDashedChange: (value: boolean) => void
-  themePresetId: string | null
-  onThemePresetChange: (presetId: string) => void
   themeOverrides: ThemeOverrides
-  onThemeOverridesChange: (overrides: ThemeOverrides) => void
-  themePreviews: Record<string, string>
 }
 
-const LAYER_ROWS = [
+export const DEFAULT_SETTINGS: MapSettings = {
+  showCategories: false,
+  showLabels: true,
+  showPeople: false,
+  showAssets: true,
+  zoomOnNavigate: false,
+  smoothing: 6,
+  thickness: 10,
+  dashed: true,
+  themeOverrides: THEME_PRESETS[0].overrides,
+}
+
+type SwitchKey = {
+  [K in keyof MapSettings]: MapSettings[K] extends boolean ? K : never
+}[keyof MapSettings]
+
+interface SwitchSetting {
+  key: SwitchKey
+  label: string
+  description: string
+  icon: LucideIcon
+  iconClass: string
+}
+
+const LAYER_SWITCHES: SwitchSetting[] = [
   {
-    key: 'categories',
+    key: 'showCategories',
     label: 'Zone colors',
     description: 'Category shading',
     icon: Palette,
-    iconBg: 'bg-amber-50 text-amber-600',
+    iconClass: 'bg-amber-50 text-amber-600',
   },
   {
-    key: 'labels',
+    key: 'showLabels',
     label: 'Space names',
     description: 'Labels on the plan',
     icon: Type,
-    iconBg: 'bg-blue-50 text-blue-600',
+    iconClass: 'bg-blue-50 text-blue-600',
   },
   {
-    key: 'people',
+    key: 'showPeople',
     label: 'People',
     description: 'Workstation occupants',
     icon: Users,
-    iconBg: 'bg-violet-50 text-violet-600',
+    iconClass: 'bg-violet-50 text-violet-600',
   },
   {
-    key: 'assets',
+    key: 'showAssets',
     label: 'Furniture',
-    description: 'Asset textures',
+    description: 'Assets on the plan',
     icon: Armchair,
-    iconBg: 'bg-emerald-50 text-emerald-600',
+    iconClass: 'bg-emerald-50 text-emerald-600',
   },
-] as const
+]
 
-const SETTING_TOGGLES = [
+const NAVIGATION_SWITCHES: SwitchSetting[] = [
   {
     key: 'zoomOnNavigate',
     label: 'Zoom on navigate',
     description: 'Auto-zoom to path',
     icon: ZoomIn,
-    iconBg: 'bg-sky-50 text-sky-600',
+    iconClass: 'bg-sky-50 text-sky-600',
   },
   {
-    key: 'pathDashed',
+    key: 'dashed',
     label: 'Dashed path',
     description: 'Dashed line style',
     icon: Minus,
-    iconBg: 'bg-slate-50 text-slate-600',
+    iconClass: 'bg-slate-50 text-slate-600',
   },
-] as const
+]
 
-function Toggle({ active }: { active: boolean }) {
-  return (
-    <div
-      aria-hidden="true"
-      className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-        active ? 'bg-primary' : 'bg-muted-foreground/20'
-      }`}
-    >
-      <div
-        className={`absolute top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${
-          active ? 'translate-x-4' : 'translate-x-0.5'
-        }`}
-      />
-    </div>
-  )
-}
-
+/** The layers and settings panel in the top-right corner. */
 export function MapControls({
-  showCategories,
-  showLabels,
-  showPeople,
-  showAssets,
-  onShowCategoriesChange,
-  onShowLabelsChange,
-  onShowPeopleChange,
-  onShowAssetsChange,
-  pathSmoothing,
-  onPathSmoothingChange,
-  zoomOnNavigate,
-  onZoomOnNavigateChange,
-  pathThickness,
-  onPathThicknessChange,
-  pathDashed,
-  onPathDashedChange,
-  themePresetId,
-  onThemePresetChange,
-  themeOverrides,
-  onThemeOverridesChange,
-  themePreviews,
-}: MapControlsProps) {
+  settings,
+  onChange,
+}: {
+  settings: MapSettings
+  onChange: (change: Partial<MapSettings>) => void
+}) {
   const [expanded, setExpanded] = useState(false)
-  const [themeEditorOpen, setThemeEditorOpen] = useState(false)
-  const sliderId = useId()
+  const [themesOpen, setThemesOpen] = useState(false)
+  const previews = useThemePreviews(expanded && themesOpen, settings)
 
-  // Escape key closes the panel
   useEffect(() => {
     if (!expanded) return
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        setExpanded(false)
-      }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setExpanded(false)
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [expanded])
-
-  const layerStateMap: Record<string, boolean> = {
-    categories: showCategories,
-    labels: showLabels,
-    people: showPeople,
-    assets: showAssets,
-  }
-
-  const layerHandlerMap: Record<string, (v: boolean) => void> = {
-    categories: onShowCategoriesChange,
-    labels: onShowLabelsChange,
-    people: onShowPeopleChange,
-    assets: onShowAssetsChange,
-  }
-
-  const settingStateMap: Record<string, boolean> = {
-    zoomOnNavigate,
-    pathDashed,
-  }
-
-  const settingHandlerMap: Record<string, (v: boolean) => void> = {
-    zoomOnNavigate: onZoomOnNavigateChange,
-    pathDashed: onPathDashedChange,
-  }
 
   if (!expanded) {
     return (
@@ -179,16 +134,21 @@ export function MapControls({
     )
   }
 
+  const switchRow = ({ key, ...row }: SwitchSetting) => (
+    <SwitchRow
+      key={key}
+      {...row}
+      checked={settings[key]}
+      onChange={(checked) => onChange({ [key]: checked })}
+    />
+  )
+
   return (
     <section
-      className={cn(
-        'floating-panel kiosk-scroll max-h-[calc(100vh-2rem)] overflow-x-hidden overflow-y-auto transition-[width]',
-        'w-[30rem]',
-      )}
+      className="floating-panel kiosk-scroll max-h-[calc(100vh-2rem)] w-[30rem] overflow-x-hidden overflow-y-auto transition-[width]"
       aria-label="Layers and settings"
-      onWheel={(e) => e.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
     >
-      {/* Header */}
       <button
         onClick={() => setExpanded(false)}
         aria-expanded={expanded}
@@ -199,40 +159,14 @@ export function MapControls({
         Layers & Settings
       </button>
 
-      {/* Layer rows */}
       <div
         className="border-t border-border/30 px-2 py-2"
         role="group"
         aria-label="Layer visibility"
       >
-        {LAYER_ROWS.map(({ key, label, description, icon: Icon, iconBg }) => {
-          const active = layerStateMap[key]
-          return (
-            <button
-              key={key}
-              role="switch"
-              aria-checked={active}
-              aria-label={`${label}: ${description}`}
-              onClick={() => layerHandlerMap[key](!active)}
-              className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
-            >
-              <div
-                className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}
-                aria-hidden="true"
-              >
-                <Icon className="size-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium leading-tight">{label}</p>
-                <p className="text-xs text-muted-foreground">{description}</p>
-              </div>
-              <Toggle active={active} />
-            </button>
-          )
-        })}
+        {LAYER_SWITCHES.map(switchRow)}
       </div>
 
-      {/* Navigation settings */}
       <div
         className="border-t border-border/30 px-2 py-2"
         role="group"
@@ -241,166 +175,214 @@ export function MapControls({
         <p className="px-2 pb-1 text-xs font-medium tracking-wide text-muted-foreground/70 uppercase">
           Navigation
         </p>
-
-        {SETTING_TOGGLES.map(
-          ({ key, label, description, icon: Icon, iconBg }) => {
-            const active = settingStateMap[key]
-            return (
-              <button
-                key={key}
-                role="switch"
-                aria-checked={active}
-                aria-label={`${label}: ${description}`}
-                onClick={() => settingHandlerMap[key](!active)}
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
-              >
-                <div
-                  className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}
-                  aria-hidden="true"
-                >
-                  <Icon className="size-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium leading-tight">{label}</p>
-                  <p className="text-xs text-muted-foreground">{description}</p>
-                </div>
-                <Toggle active={active} />
-              </button>
-            )
-          },
-        )}
-
-        {/* Path smoothing slider */}
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <div
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600"
-            aria-hidden="true"
-          >
-            <svg
-              viewBox="0 0 16 16"
-              className="size-4"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="M2 12 Q8 2 14 8" strokeWidth="2" />
-            </svg>
-          </div>
-          <div className="min-w-0 flex-1">
-            <label
-              htmlFor={`${sliderId}-smoothing`}
-              className="text-sm font-medium leading-tight"
-            >
-              Path smoothing
-            </label>
-            <input
-              id={`${sliderId}-smoothing`}
-              type="range"
-              min={0}
-              max={12}
-              step={1}
-              value={pathSmoothing}
-              onChange={(e) => onPathSmoothingChange(Number(e.target.value))}
-              className="mt-1 h-1 w-full cursor-pointer accent-primary"
+        {NAVIGATION_SWITCHES.map(switchRow)}
+        <SliderRow
+          label="Path smoothing"
+          iconClass="bg-teal-50 text-teal-600"
+          icon={<path d="M2 12 Q8 2 14 8" strokeWidth="2" />}
+          value={settings.smoothing}
+          min={0}
+          max={12}
+          step={1}
+          onChange={(smoothing) => onChange({ smoothing })}
+        />
+        <SliderRow
+          label="Path thickness"
+          iconClass="bg-indigo-50 text-indigo-600"
+          icon={
+            <line
+              x1="2"
+              y1="8"
+              x2="14"
+              y2="8"
+              strokeWidth={settings.thickness / 4}
             />
-          </div>
-          <span
-            className="shrink-0 text-xs tabular-nums text-muted-foreground"
-            aria-hidden="true"
-          >
-            {pathSmoothing}
-          </span>
-        </div>
-
-        {/* Path thickness slider */}
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <div
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600"
-            aria-hidden="true"
-          >
-            <svg
-              viewBox="0 0 16 16"
-              className="size-4"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <line
-                x1="2"
-                y1="8"
-                x2="14"
-                y2="8"
-                strokeWidth={pathThickness / 4}
-              />
-            </svg>
-          </div>
-          <div className="min-w-0 flex-1">
-            <label
-              htmlFor={`${sliderId}-thickness`}
-              className="text-sm font-medium leading-tight"
-            >
-              Path thickness
-            </label>
-            <input
-              id={`${sliderId}-thickness`}
-              type="range"
-              min={4}
-              max={20}
-              step={2}
-              value={pathThickness}
-              onChange={(e) => onPathThicknessChange(Number(e.target.value))}
-              className="mt-1 h-1 w-full cursor-pointer accent-primary"
-            />
-          </div>
-          <span
-            className="shrink-0 text-xs tabular-nums text-muted-foreground"
-            aria-hidden="true"
-          >
-            {pathThickness}
-          </span>
-        </div>
+          }
+          value={settings.thickness}
+          min={4}
+          max={20}
+          step={2}
+          onChange={(thickness) => onChange({ thickness })}
+        />
       </div>
 
-      {/* Themes */}
       <div className="border-t border-border/30 px-2 py-2">
         <button
-          onClick={() => setThemeEditorOpen(!themeEditorOpen)}
-          aria-expanded={themeEditorOpen}
+          onClick={() => setThemesOpen(!themesOpen)}
+          aria-expanded={themesOpen}
           aria-label="Toggle themes"
           className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
         >
-          <div
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-600"
-            aria-hidden="true"
-          >
+          <RowIcon className="bg-rose-50 text-rose-600">
             <Paintbrush className="size-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium leading-tight">Themes</p>
-            <p className="text-xs text-muted-foreground">
-              Presets &amp; element styles
-            </p>
-          </div>
+          </RowIcon>
+          <RowText label="Themes" description="Presets & element styles" />
           <ChevronDown
-            className={cn(
-              'size-4 text-muted-foreground transition-transform',
-              themeEditorOpen && 'rotate-180',
-            )}
+            className={`size-4 text-muted-foreground transition-transform ${
+              themesOpen ? 'rotate-180' : ''
+            }`}
             aria-hidden="true"
           />
         </button>
-        {themeEditorOpen && (
+        {themesOpen && (
           <ThemeEditor
-            overrides={themeOverrides}
-            onChange={onThemeOverridesChange}
-            themePresetId={themePresetId}
-            onThemePresetChange={onThemePresetChange}
-            themePreviews={themePreviews}
+            overrides={settings.themeOverrides}
+            onChange={(themeOverrides) => onChange({ themeOverrides })}
+            previews={previews}
           />
         )}
       </div>
     </section>
+  )
+}
+
+/**
+ * A thumbnail of the floor under each preset, rendered by a second, hidden
+ * engine the first time the themes are opened. The layers in force then are
+ * used throughout, so toggling one mid-run cannot mix two different views.
+ */
+function useThemePreviews(
+  wanted: boolean,
+  layers: LayerSettings,
+): Record<string, string> {
+  const [previews, setPreviews] = useState<Record<string, string>>({})
+  const needed = wanted && Object.keys(previews).length === 0
+  const generate = useEffectEvent((signal: AbortSignal) =>
+    generateThemePreviews(layers, signal),
+  )
+
+  useEffect(() => {
+    if (!needed) return
+    const controller = new AbortController()
+    generate(controller.signal).then(
+      (result) => {
+        if (!controller.signal.aborted) setPreviews(result)
+      },
+      (error: unknown) => {
+        console.warn('Theme previews could not be generated', error)
+      },
+    )
+    return () => controller.abort()
+  }, [needed])
+
+  return previews
+}
+
+function RowIcon({
+  className,
+  children,
+}: {
+  className: string
+  children: ReactNode
+}) {
+  return (
+    <div
+      className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${className}`}
+      aria-hidden="true"
+    >
+      {children}
+    </div>
+  )
+}
+
+function RowText({
+  label,
+  description,
+}: {
+  label: string
+  description: string
+}) {
+  return (
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-medium leading-tight">{label}</p>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </div>
+  )
+}
+
+function SwitchRow({
+  label,
+  description,
+  icon: Icon,
+  iconClass,
+  checked,
+  onChange,
+}: Omit<SwitchSetting, 'key'> & {
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      aria-label={`${label}: ${description}`}
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent"
+    >
+      <RowIcon className={iconClass}>
+        <Icon className="size-4" />
+      </RowIcon>
+      <RowText label={label} description={description} />
+      <Switch checked={checked} />
+    </button>
+  )
+}
+
+function SliderRow({
+  label,
+  icon,
+  iconClass,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  label: string
+  /** The inside of a 16×16 stroked SVG. */
+  icon: ReactNode
+  iconClass: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (value: number) => void
+}) {
+  const id = useId()
+  return (
+    <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+      <RowIcon className={iconClass}>
+        <svg
+          viewBox="0 0 16 16"
+          className="size-4"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+        >
+          {icon}
+        </svg>
+      </RowIcon>
+      <div className="min-w-0 flex-1">
+        <label htmlFor={id} className="text-sm font-medium leading-tight">
+          {label}
+        </label>
+        <input
+          id={id}
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          className="mt-1 h-1 w-full cursor-pointer accent-primary"
+        />
+      </div>
+      <span
+        className="shrink-0 text-xs tabular-nums text-muted-foreground"
+        aria-hidden="true"
+      >
+        {value}
+      </span>
+    </div>
   )
 }

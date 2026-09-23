@@ -9,38 +9,5 @@
     ],
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "warn"
-  },
-  "overrides": [
-    {
-      "files": ["**/core/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "react",
-                "message": "src/core must stay framework-agnostic."
-              },
-              {
-                "name": "react-dom",
-                "message": "src/core must stay framework-agnostic."
-              }
-            ],
-            "patterns": [
-              {
-                "group": [
-                  "react/*",
-                  "react-dom/*",
-                  "#/hooks/*",
-                  "#/components/*"
-                ],
-                "message": "src/core must stay framework-agnostic."
-              }
-            ]
-          }
-        ]
-      }
-    }
-  ]
+  }
 }

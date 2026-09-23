@@ -1,20 +1,20 @@
 # Floor plan kiosk
 
-A wall-mounted kiosk built with the [Archilogic Floor Plan SDK](https://developers.archilogic.com/floor-plan-engine/guide.html), the kind of screen you put in a lobby or by a lift. It shows the floor, lets someone search for a space or a colleague, and draws them a walking path to it.
+A wall-mounted kiosk app built with the [Archilogic Floor Plan SDK](https://developers.archilogic.com/floor-plan-engine/guide.html), the kind you'd find in a lobby or by the lifts. It shows the floor, lets visitors search for a room or a colleague, and draws a walking route to get there.
 
-It is a worked example: one complete application rather than a set of snippets, showing how the SDK's queries, theming, markers and drawing layers fit together.
+The code shows how the SDK's queries, theming, markers and drawing layers work together in a complete app.
 
 ## What it does
 
-- **Search** spaces and people, or filter by [space category](https://developers.archilogic.com/space-graph/spaces.html) (work, meet, care, socialize, support)
-- **Wayfinding**: a walking path from the kiosk to any space or workstation, with distance, an estimated walking time and turn-by-turn directions
-- **Draggable origin and destination**, so you can route between any two points
-- **People finder**: avatar markers on occupied workstations, driven by custom attributes
-- **Dashboard**: attendance, free meeting rooms, today's events and the weather
-- **Live theming**: an editor over the SDK's theme API, with four presets
-- **Deep links**: `?to=<id>&type=space&directions=1` opens straight on a destination, so a QR code or a calendar invite can point at a room
-- **Any floor**: `?floor=<id>&token=<token>` points the kiosk at another floor without a rebuild
-- **Idle reset**: returns to the dashboard when nobody is using it
+- **Search** for spaces and people, or browse by [space category](https://developers.archilogic.com/space-graph/spaces.html) (work, meet, care, socialize, support)
+- **Wayfinding** from the kiosk to any space or workstation, with the distance, walking time and turn-by-turn directions
+- **Draggable start and end points**, so you can route between any two places
+- **People finder** that shows avatars on occupied workstations, based on custom attributes
+- **Dashboard** with attendance, free meeting rooms, today's events and the weather
+- **Theme editor** built on the SDK's theme API, with four presets
+- **Deep links** like `?to=<id>&type=space&directions=1` that open straight on a destination, handy for QR codes or calendar invites
+- **Any floor** via `?floor=<id>&token=<token>`, with no rebuild needed
+- **Idle reset** back to the dashboard after a minute without use
 
 ## Running it
 
@@ -23,21 +23,21 @@ npm install
 npm run dev
 ```
 
-That runs against a public demo floor, so it works with no account and no configuration.
+This uses a public demo floor, so you don't need an account or any configuration.
 
-### Pointing it at your own floor
+### Using your own floor
 
-You need an Archilogic account with a floor in it.
+You'll need an Archilogic account with at least one floor.
 
-1. Create a **publishable access token** at [app.archilogic.com → Settings → Access tokens](https://app.archilogic.com/organization/settings/access-tokens), allowing the domains you will serve from.
-2. Open your floor in the Archilogic dashboard and copy its **floor id** from the URL.
-3. Either pass both in the URL, or copy `.env.example` to `.env` and fill them in to make them the defaults for a build.
+1. Create a **publishable access token** at [app.archilogic.com → Settings → Access tokens](https://app.archilogic.com/organization/settings/access-tokens), and allow the domains you'll serve the kiosk from.
+2. Open your floor in the Archilogic dashboard and copy the **floor id** from the URL.
+3. Pass both as URL parameters, or copy `.env.example` to `.env` and fill them in to make them the default for your build.
 
-A publishable access token is designed to ship in a browser bundle: it is domain-restricted and read-only. It is not a secret, which is why the demo values are committed and why it can go in a URL.
+Publishable tokens are meant to be used in the browser. They're read-only and only work on the domains you allow, so they aren't secret. That's why the demo token is committed to the repo, and why it's fine to put one in a URL.
 
 #### URL parameters
 
-Every setting resolves from the URL first, then the environment, then the demo floor, so a running kiosk can show any floor without a rebuild:
+The kiosk reads each setting from the URL first, then from the environment, and falls back to the demo floor. So a running kiosk can switch to another floor without a rebuild:
 
 ```
 ?floor=<floor id>&token=<publishable access token>
@@ -52,41 +52,45 @@ Every setting resolves from the URL first, then the environment, then the demo f
 | `occupantAttribute`   | `VITE_ARCHILOGIC_OCCUPANT_ATTRIBUTE`       | `apiFieldName` of the workstation attribute holding the occupant's name.                  |
 | `employeeIdAttribute` | `VITE_ARCHILOGIC_EMPLOYEE_ID_ATTRIBUTE`    | `apiFieldName` of the workstation attribute holding an employee id.                       |
 
-These parameters survive a reload, and links copied from the kiosk keep them, so a shared link opens on the same floor.
+The parameters stay in place after a reload, and links copied from the kiosk include them, so a shared link opens on the same floor.
 
-To show occupants on workstations, define [custom attributes](https://developers.archilogic.com/space-graph/custom-attributes.html) on your floor's workstation assets and pass their `apiFieldName`s as above. Without them everything else still works; the people finder is simply empty.
+To show who sits where, add [custom attributes](https://developers.archilogic.com/space-graph/custom-attributes.html) to the workstation assets on your floor and pass their `apiFieldName`s as shown above. Everything else works without them; the people finder will just be empty.
 
-## How it is put together
+## How it's put together
 
-The application is split so that the half that knows about floor plans does not know about React:
+All the code that talks to the Floor Plan SDK lives in `src/floor-plan/`, with one file per feature, so you can see how the kiosk uses each part of the SDK without digging through the rest of the app.
 
 ```
 src/
-  core/            no framework imports, enforced by the linter
-    index.ts       the surface a UI binds to
-    domain/        spaces, workstations, search, stats, selectors, formatting
-    theme/         theme construction and presets
-    highlight/     what is tinted on the plan, and why
-    wayfinding/    path geometry and turn-by-turn directions
-    sdk/           talks to the Floor Plan SDK: loading, queries,
-                   markers, layers. Framework-free, but not pure.
-    demo-data/     stand-in events, weather and equipment
-  hooks/           thin React bindings over core
-  components/      the React UI
+  main.tsx               starts loading the floor before React mounts
+  Kiosk.tsx              wires the visitor's state to the floor plan (start here)
+  config.ts              which floor and token, from the URL, the environment or the demo
+  kiosk-state.ts         spaces, people and events; the state machine; search
+  demo-data.ts           stand-in events, weather and meeting-room equipment
+  floor-plan/
+    engine.ts            create the engine, load and frame the floor, read its
+                         spaces and workstations, resolve clicks
+    theme.ts             default styles, presets, and the theme and visibility
+                         passed to `floorPlan.set`
+    highlights.ts        what is tinted on the plan, and why
+    wayfinding.ts        `getPath`, the drawn route, its pins, and turn-by-turn directions
+    markers.ts           HTML markers: route pins and people avatars
+  components/            the rest of the UI: dashboard, search, details, map controls
 ```
 
-`src/core` is the part worth reading if you are building your own kiosk, and the part you would keep if you built the UI with something other than React. `src/core/sdk` is the exception to "pure": it holds a live engine instance and creates DOM, but it has no framework in it. The header of `src/core/index.ts` lists the seven places a UI attaches.
+If you only read one file, make it `Kiosk.tsx`. Everything the kiosk does with the plan (theming, highlights, clicks, routing and the people markers) is a few lines there that call into `floor-plan/`.
 
-Two rules hold the rendering together:
+### Drawing the plan
 
-- **One writer.** `applyTheme` is the only thing that calls `floorPlan.set({ theme })`, and it always writes a complete theme, since a partial update would clobber the styles the engine is currently rendering with.
-- **One source of truth for highlighting.** Hover, selection, category filters and search results all resolve through `computeHighlights` into a single set of node styles. Nothing paints the plan imperatively, so nothing has to reconstruct a previous colour in order to undo itself.
+`Kiosk.tsx` makes the only `floorPlan.set({ theme, visibility })` call, and `floorPlanStyle` always builds the full theme. The engine merges each new theme with its own defaults, so a partial theme would lose everything it leaves out. Hidden element types, furniture and labels use the SDK's `visibility` option.
+
+`computeHighlights` turns every highlight (hover, selection, category filters, search results, the dashboard's events and the route's destination) into one list of node styles. Nothing paints the plan directly, so clearing a highlight never means restoring an old colour.
 
 ## A note on the pinned SDK version
 
-`@archilogic/floor-plan-sdk` is pinned to an exact snapshot build rather than a release range. The wayfinding in this example is built on `floorPlan.getPath({ start, end })`, which is available in that snapshot but not in the current stable release. **Changing the dependency will break pathfinding** until `getPath` ships in a stable version.
+`@archilogic/floor-plan-sdk` is pinned to an exact snapshot build. Wayfinding uses `floorPlan.getPath({ start, end })`, which is in that snapshot but not yet in a stable release. **Changing the dependency will break pathfinding** until `getPath` is released.
 
-Everything else here (queries, theming, markers, drawing layers, deep links) works against the current stable SDK.
+Everything else (queries, theming, markers, drawing layers, deep links) works with the current stable SDK.
 
 ## Commands
 
@@ -94,7 +98,7 @@ Everything else here (queries, theming, markers, drawing layers, deep links) wor
 npm run dev        # dev server on :5173
 npm run build      # production build
 npm run preview    # serve the production build
-npm test           # unit tests for src/core
+npm test           # unit tests
 npm run test:e2e   # browser smoke tests (needs `npx playwright install chromium`)
 npm run typecheck  # tsc --noEmit
 npm run lint       # oxlint
@@ -103,8 +107,8 @@ npm run check      # prettier --write && oxlint --fix
 
 ## Requirements
 
-Node 24 (see `.nvmrc`). Using the SDK requires an agreement with Archilogic; see the [developer documentation](https://developers.archilogic.com) to get started.
+Node 24 (see `.nvmrc`). Using the SDK requires an agreement with Archilogic. The [developer documentation](https://developers.archilogic.com) explains how to get started.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE). The Floor Plan SDK itself is licensed separately, under your agreement with Archilogic AG.
+MIT, see [LICENSE](./LICENSE). The Floor Plan SDK itself is licensed separately under your agreement with Archilogic AG.
