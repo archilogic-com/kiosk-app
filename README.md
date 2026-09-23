@@ -1,10 +1,6 @@
 # Floor plan kiosk
 
-
-
 https://github.com/user-attachments/assets/3d60d5f1-75cd-4dbf-91e2-121a1df437ff
-
-
 
 A wall-mounted kiosk app built with the [Archilogic Floor Plan SDK](https://developers.archilogic.com/floor-plan-engine/guide.html), the kind you'd find in a lobby or by the lifts. It shows the floor, lets visitors search for a room or a colleague, and draws a walking route to get there.
 
