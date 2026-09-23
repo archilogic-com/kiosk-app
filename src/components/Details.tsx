@@ -97,13 +97,10 @@ export function SpaceDetailCard({
   space,
   bookedSpaceIds,
   onBook,
-  reserveBookingSlot = false,
 }: {
   space: Space
   bookedSpaceIds: Set<string>
   onBook: (spaceId: string) => void
-  /** Keep the booking button's space even when this space cannot be booked. */
-  reserveBookingSlot?: boolean
 }) {
   const amenities = demoAmenities(space)
   const seats = space.seatCapacity ?? 0
@@ -122,7 +119,7 @@ export function SpaceDetailCard({
           <Pill key={amenity} {...AMENITIES[amenity]} />
         ))}
       </div>
-      {isMeetingRoom ? (
+      {isMeetingRoom && (
         <button
           type="button"
           disabled={isBooked}
@@ -131,8 +128,6 @@ export function SpaceDetailCard({
         >
           {isBooked ? 'Booked' : 'Book room'}
         </button>
-      ) : (
-        reserveBookingSlot && <div className="h-9" aria-hidden="true" />
       )}
     </div>
   )
@@ -344,7 +339,6 @@ export function DestinationDetail({
               space={space}
               bookedSpaceIds={bookedSpaceIds}
               onBook={onBook}
-              reserveBookingSlot
             />
           </div>
         )}

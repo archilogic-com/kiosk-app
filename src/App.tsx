@@ -139,7 +139,7 @@ function LoadingOverlay({ loader }: { loader: FloorPlanLoader }) {
       onAnimationEnd={onAnimationEnd}
     >
       <span className="sr-only">{STAGE_LABEL[stage]}</span>
-      <div className="absolute top-4 left-4">
+      <div className="dashboard-enter absolute top-4 left-4">
         <DashboardSkeleton />
       </div>
       <div

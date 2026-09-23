@@ -152,7 +152,7 @@ body {
   }
 }
 
-.dashboard-stagger {
+.dashboard-enter .dashboard-stagger {
   animation: slide-in-left 0.4s ease-out backwards;
   animation-delay: calc(var(--stagger-index, 0) * 80ms);
 }

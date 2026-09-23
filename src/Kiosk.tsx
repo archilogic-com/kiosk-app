@@ -193,20 +193,32 @@ export function Kiosk({
   useResetWhenIdle(dispatch)
 
   // The outgoing panel finishes its exit before the incoming one mounts, so
-  // the panel on screen trails `mode` by the length of that animation.
-  const [displayMode, setDisplayMode] = useState(mode)
+  // the panel on screen trails `mode` by the length of that animation. The
+  // first panel does not slide in: the loading skeleton already did.
+  const [shown, setShown] = useState({ mode, entering: false })
   useEffect(() => {
-    if (mode === displayMode) return
-    const timer = setTimeout(() => setDisplayMode(mode), EXIT_ANIMATION_MS)
+    if (mode === shown.mode) return
+    const timer = setTimeout(
+      () => setShown({ mode, entering: true }),
+      EXIT_ANIMATION_MS,
+    )
     return () => clearTimeout(timer)
-  }, [mode, displayMode])
-  const exiting = mode !== displayMode
+  }, [mode, shown.mode])
+  const exiting = mode !== shown.mode
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <div className="pointer-events-auto absolute top-4 left-4">
-        {displayMode === 'dashboard' ? (
-          <div className={exiting ? 'dashboard-exit' : ''}>
+        {shown.mode === 'dashboard' ? (
+          <div
+            className={
+              exiting
+                ? 'dashboard-exit'
+                : shown.entering
+                  ? 'dashboard-enter'
+                  : ''
+            }
+          >
             <Dashboard
               floor={floor}
               events={events}
@@ -219,7 +231,13 @@ export function Kiosk({
         ) : (
           <div
             style={{ width: PANEL.searchWidth }}
-            className={exiting ? 'searchbar-exit' : 'searchbar-enter'}
+            className={
+              exiting
+                ? 'searchbar-exit'
+                : shown.entering
+                  ? 'searchbar-enter'
+                  : ''
+            }
           >
             <SearchPanel
               state={state}
