@@ -4,7 +4,7 @@
  * A UI binds these in seven places, each a few lines in any framework with
  * reactive state and lifecycle hooks (the React versions live in src/hooks):
  *
- *   Engine      createFloorPlan(container) on mount, destroy() on unmount
+ *   Engine      loadFloorPlan(container, insets), once, before the UI mounts
  *   Floor data  extractFloorData(floorPlan), once the engine exists
  *   State       reduce(state, action) from initialKioskState, read via selectors
  *   Theme       applyTheme(floorPlan, options) whenever layers or highlights change
@@ -88,10 +88,10 @@ export { generateDirections } from '#/core/wayfinding/directions'
 export { pathBoundingBox, roundCorners } from '#/core/wayfinding/path'
 
 // Everything that touches the Floor Plan SDK. Framework-free, not pure.
-export type { FloorPlanHandle } from '#/core/sdk/create-floor-plan'
-export { createFloorPlan } from '#/core/sdk/create-floor-plan'
+export type { FloorPlanLoader, LoadStage } from '#/core/sdk/load-floor-plan'
+export { loadFloorPlan } from '#/core/sdk/load-floor-plan'
 export type { FloorData } from '#/core/sdk/queries'
-export { EMPTY_FLOOR_DATA, extractFloorData } from '#/core/sdk/queries'
+export { extractFloorData } from '#/core/sdk/queries'
 export type { LayerOptions } from '#/core/sdk/apply-theme'
 export { applyTheme } from '#/core/sdk/apply-theme'
 export { resolveClick } from '#/core/sdk/resolve-click'

@@ -4,7 +4,7 @@ import type { SearchableItem, Space, Workstation } from '#/core/domain/types'
 import { resolveClick } from '#/core/sdk/resolve-click'
 
 export function useFloorPlanClick(
-  floorPlan: FloorPlanEngine | null,
+  floorPlan: FloorPlanEngine,
   workstations: Workstation[],
   spaces: Space[],
   onSelect: (item: SearchableItem | null) => void,
@@ -20,7 +20,6 @@ export function useFloorPlanClick(
   )
 
   useEffect(() => {
-    if (!floorPlan) return
     const handleClick = (event: { nodeId?: string; position: Vector2 }) =>
       select(floorPlan, event)
     floorPlan.on('click', handleClick)

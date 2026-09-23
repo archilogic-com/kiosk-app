@@ -13,14 +13,6 @@ export interface FloorData {
   categoryCounts: Record<string, number>
 }
 
-export const EMPTY_FLOOR_DATA: FloorData = {
-  workstations: [],
-  spaces: [],
-  kioskPosition: null,
-  kioskSpaceName: null,
-  categoryCounts: {},
-}
-
 /** Where the kiosk is assumed to stand, best match first. */
 const KIOSK_SUBCATEGORIES = ['foyer', 'entrance', 'reception', 'lobby']
 

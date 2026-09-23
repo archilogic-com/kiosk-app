@@ -3,14 +3,13 @@ import type { PreviewSettings } from '#/core/sdk/theme-previews'
 import { generateThemePreviews } from '#/core/sdk/theme-previews'
 
 /**
- * Theme preview thumbnails, generated once the floor has loaded.
+ * Theme preview thumbnails, generated once on mount.
  *
  * The settings in force when generation starts are the ones used throughout,
  * so toggling a layer mid-run cannot produce thumbnails from two different
  * views.
  */
 export function useThemePreviews(
-  floorPlanReady: boolean,
   settings: PreviewSettings,
 ): Record<string, string> {
   const [previews, setPreviews] = useState<Record<string, string>>({})
@@ -19,7 +18,6 @@ export function useThemePreviews(
   )
 
   useEffect(() => {
-    if (!floorPlanReady) return
     const controller = new AbortController()
     generate(controller.signal)
       .then((result) => {
@@ -29,7 +27,7 @@ export function useThemePreviews(
         console.warn('Theme previews could not be generated', error)
       })
     return () => controller.abort()
-  }, [floorPlanReady])
+  }, [])
 
   return previews
 }

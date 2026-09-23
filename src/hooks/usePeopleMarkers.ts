@@ -5,7 +5,7 @@ import type { PeopleMarkerCallbacks } from '#/core/sdk/people-marker-layer'
 import { PeopleMarkerLayer } from '#/core/sdk/people-marker-layer'
 
 export function usePeopleMarkers(
-  floorPlan: FloorPlanEngine | null,
+  floorPlan: FloorPlanEngine,
   workstations: Workstation[],
   highlightedId: string | null,
   callbacks: PeopleMarkerCallbacks = {},
@@ -19,7 +19,6 @@ export function usePeopleMarkers(
   )
 
   useEffect(() => {
-    if (!floorPlan) return
     const layer = new PeopleMarkerLayer(floorPlan, { onHover, onClick })
     layerRef.current = layer
     return () => {

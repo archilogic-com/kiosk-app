@@ -16,7 +16,7 @@ import {
  * part of it changes, and mirrors the route it reports into state.
  */
 export function useWayfinding(
-  floorPlan: FloorPlanEngine | null,
+  floorPlan: FloorPlanEngine,
   input: WayfindingInput,
   callbacks: WayfindingCallbacks = {},
 ): RouteState {
@@ -34,7 +34,6 @@ export function useWayfinding(
   )
 
   useEffect(() => {
-    if (!floorPlan) return
     const controller = new WayfindingController(floorPlan, {
       onOriginMoved,
       onDestinationMoved,

@@ -4,14 +4,13 @@ import type { LayerOptions } from '#/core/sdk/apply-theme'
 import { applyTheme } from '#/core/sdk/apply-theme'
 
 export function useFloorPlanLayers(
-  floorPlan: FloorPlanEngine | null,
+  floorPlan: FloorPlanEngine,
   options: LayerOptions,
 ) {
   const { showCategories, showLabels, showAssets, byId, themeOverrides } =
     options
 
   useEffect(() => {
-    if (!floorPlan) return
     applyTheme(floorPlan, {
       showCategories,
       showLabels,

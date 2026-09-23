@@ -4,7 +4,7 @@ import type { HighlightState, NodeStyles } from '#/core/highlight/compute'
 import { computeHighlights, toNodeStyles } from '#/core/highlight/compute'
 
 export function useMapHighlights(
-  floorPlan: FloorPlanEngine | null,
+  floorPlan: FloorPlanEngine,
   state: HighlightState,
 ): NodeStyles {
   const {
@@ -20,7 +20,6 @@ export function useMapHighlights(
   } = state
 
   return useMemo(() => {
-    if (!floorPlan) return {}
     return toNodeStyles(
       floorPlan,
       computeHighlights({

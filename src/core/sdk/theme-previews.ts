@@ -1,5 +1,5 @@
 import type { FloorPlanEngine } from '@archilogic/floor-plan-sdk'
-import { loadConfiguredFloor } from '#/core/sdk/create-floor-plan'
+import { loadConfiguredFloor } from '#/core/sdk/load-floor-plan'
 import { buildFloorPlanTheme } from '#/core/theme/build-theme'
 import { THEME_PRESETS } from '#/core/theme/presets'
 
