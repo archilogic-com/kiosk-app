@@ -58,10 +58,13 @@ function fakeEngine() {
     /** Resolve the oldest outstanding getPath call. */
     resolveNext: (distance: number) =>
       pending.shift()?.({
-        path: [
-          [0, 0],
-          [0, distance],
-        ],
+        path:
+          distance > 0
+            ? [
+                [0, 0],
+                [0, distance],
+              ]
+            : [],
         distance,
       }),
     pendingCount: () => pending.length,
@@ -157,6 +160,19 @@ describe('WayfindingController', () => {
     expect(fake.layers.filter((l) => !l.destroyed)).toHaveLength(0)
     expect(seen.at(-1)?.distance).toBeNull()
     expect(seen.at(-1)?.pathError).toBeNull()
+  })
+
+  it('reports an unreachable destination when getPath returns an empty path', async () => {
+    const fake = fakeEngine()
+    const controller = new WayfindingController(fake.engine)
+    const seen: RouteState[] = []
+    controller.subscribe((r) => seen.push(r))
+    controller.update(input({ target: { type: 'space', data: oslo } }))
+    fake.resolveNext(0)
+    await flush()
+    expect(seen.at(-1)?.pathError).toBe('No walking path to this destination.')
+    expect(seen.at(-1)?.distance).toBeNull()
+    expect(fake.layers.filter((l) => !l.destroyed)).toHaveLength(0)
   })
 
   it('surfaces a failed path as an error rather than an empty panel', async () => {

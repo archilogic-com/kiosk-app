@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react"],
+  "ignorePatterns": ["dist/"],
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["**/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react",
+                "message": "src/core must stay framework-agnostic."
+              },
+              {
+                "name": "react-dom",
+                "message": "src/core must stay framework-agnostic."
+              }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "react/*",
+                  "react-dom/*",
+                  "#/hooks/*",
+                  "#/components/*"
+                ],
+                "message": "src/core must stay framework-agnostic."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

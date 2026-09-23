@@ -15,6 +15,7 @@ const PATH_LAYER_ID = 'wayfinding-path'
 /** Metres of clearance left around a route when zooming to it. */
 const ZOOM_PADDING_M = 8
 const CORNER_RADIUS_M = 0.6
+const NO_PATH_MESSAGE = 'No walking path to this destination.'
 
 export interface PathStyle {
   smoothing: number
@@ -197,15 +198,22 @@ export class WayfindingController {
       input.destinationOverride?.name ?? labelFor(input.target)
 
     try {
-      const { path, distance } = await this.floorPlan.getPath(
-        origin,
-        destination,
-      )
+      const result = await this.floorPlan.getPath({
+        start: origin,
+        end: destination,
+      })
       // The input moved on while the path was computing: someone else's
       // route, or no route at all, is what should be on screen now.
       if (generation !== this.generation) return
 
-      const points = path as Vector2[]
+      // An empty path means the two points are not connected; null means no
+      // layout is loaded. Neither is an error, but both leave nothing to draw.
+      if (!result || result.path.length === 0) {
+        this.emit({ ...NO_ROUTE, pathError: NO_PATH_MESSAGE })
+        return
+      }
+
+      const { path: points, distance } = result
       this.drawPath(points, input.style)
       if (input.zoomOnNavigate && !this.dragging) {
         zoomToFit(
@@ -234,15 +242,14 @@ export class WayfindingController {
       })
     } catch (error: unknown) {
       if (generation !== this.generation) return
-      // A path can legitimately not exist between disconnected spaces, but a
-      // query failure looks identical from here. Say something either way
-      // rather than leaving an empty panel.
+      // A query failure, as opposed to a missing route. Say something rather
+      // than leaving an empty panel.
       this.emit({
         ...NO_ROUTE,
         pathError:
           error instanceof Error && error.message
             ? error.message
-            : 'No walking path to this destination.',
+            : NO_PATH_MESSAGE,
       })
     }
   }

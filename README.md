@@ -42,7 +42,7 @@ The application is split so that the half that knows about floor plans does not 
 
 ```
 src/
-  core/            no framework imports, enforced by ESLint
+  core/            no framework imports, enforced by the linter
     index.ts       the surface a UI binds to
     domain/        spaces, workstations, search, stats, selectors, formatting
     theme/         theme construction and presets
@@ -64,7 +64,7 @@ Two rules hold the rendering together:
 
 ## A note on the pinned SDK version
 
-`@archilogic/floor-plan-sdk` is pinned to an exact snapshot build rather than a release range. The wayfinding in this example is built on `floorPlan.getPath(start, end)`, which is available in that snapshot but not in the current stable release. **Upgrading the dependency will break pathfinding** until `getPath` ships in a stable version.
+`@archilogic/floor-plan-sdk` is pinned to an exact snapshot build rather than a release range. The wayfinding in this example is built on `floorPlan.getPath({ start, end })`, which is available in that snapshot but not in the current stable release. **Changing the dependency will break pathfinding** until `getPath` ships in a stable version.
 
 Everything else here (queries, theming, markers, drawing layers, deep links) works against the current stable SDK.
 
@@ -77,8 +77,8 @@ npm run preview    # serve the production build
 npm test           # unit tests for src/core
 npm run test:e2e   # browser smoke tests (needs `npx playwright install chromium`)
 npm run typecheck  # tsc --noEmit
-npm run lint       # eslint
-npm run check      # prettier --write && eslint --fix
+npm run lint       # oxlint
+npm run check      # prettier --write && oxlint --fix
 ```
 
 ## Requirements

@@ -8,12 +8,7 @@ import { FPE_DEFAULT_STYLES } from '#/core/theme/defaults'
 import { CATEGORY_COLORS, hexToRgbTuple } from '#/core/theme/palette'
 
 type RoomStampField =
-  | 'id'
-  | 'name'
-  | 'usage'
-  | 'area'
-  | 'customId'
-  | ['customAttribute', string]
+  'id' | 'name' | 'usage' | 'area' | 'customId' | ['customAttribute', string]
 
 /** Build a byFilter theme array for FPE to color spaces by category */
 function buildCategoryTheme(
