@@ -228,6 +228,8 @@ export function MapControls({
           <ThemeEditor
             overrides={settings.themeOverrides}
             onChange={(themeOverrides) => onChange({ themeOverrides })}
+            zonesShown={settings.showCategories}
+            onShowZones={(showCategories) => onChange({ showCategories })}
             previews={previews}
           />
         )}

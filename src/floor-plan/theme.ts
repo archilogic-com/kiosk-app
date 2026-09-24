@@ -71,7 +71,7 @@ export const THEME_DEFAULTS = {
   labelOutline: true,
 }
 
-interface CategoryColor {
+export interface CategoryColor {
   fill: string
   fillOpacity: number
 }

@@ -15,6 +15,7 @@ import {
   toggleElementHidden,
 } from '#/floor-plan/theme'
 import type {
+  CategoryColor,
   ElementStyle,
   StyledType,
   ThemeOverrides,
@@ -64,10 +65,15 @@ const PALETTE_ROLES: Array<{
 export function ThemeEditor({
   overrides,
   onChange,
+  zonesShown,
+  onShowZones,
   previews,
 }: {
   overrides: ThemeOverrides
   onChange: (overrides: ThemeOverrides) => void
+  /** Whether the zone colours layer is on; the zone colours only show then. */
+  zonesShown: boolean
+  onShowZones: (shown: boolean) => void
   /** Thumbnails by preset id, once they have been rendered. */
   previews: Record<string, string>
 }) {
@@ -77,6 +83,11 @@ export function ThemeEditor({
   const palette = extractPalette(overrides.byType)
   const labelOutline =
     overrides.roomStamp?.textOutline ?? THEME_DEFAULTS.labelOutline
+
+  const setZoneColor = (category: string, change: Partial<CategoryColor>) => {
+    onChange(setCategoryColor(overrides, category, change))
+    onShowZones(true)
+  }
 
   const setRoomStamp = (change: ThemeOverrides['roomStamp']) =>
     onChange({ ...overrides, roomStamp: { ...overrides.roomStamp, ...change } })
@@ -194,7 +205,18 @@ export function ThemeEditor({
       </div>
 
       <div className="border-t border-border/20 px-2 pt-2">
-        <SectionHeading>Zone Colors</SectionHeading>
+        <div className="flex items-start justify-between pr-2">
+          <SectionHeading>Zone Colors</SectionHeading>
+          <button
+            role="switch"
+            aria-checked={zonesShown}
+            aria-label="Show zone colors on the plan"
+            title="Show on the plan"
+            onClick={() => onShowZones(!zonesShown)}
+          >
+            <Switch checked={zonesShown} small />
+          </button>
+        </div>
         {Object.entries(CATEGORY_COLORS).map(([category, defaults]) => {
           const label = CATEGORY_LABELS[category] ?? category
           const color = { ...defaults, ...overrides.categoryColors?.[category] }
@@ -205,17 +227,13 @@ export function ThemeEditor({
               </span>
               <ColorSwatch
                 color={color.fill}
-                onChange={(fill) =>
-                  onChange(setCategoryColor(overrides, category, { fill }))
-                }
+                onChange={(fill) => setZoneColor(category, { fill })}
                 label={`${label} fill`}
               />
               <Slider
                 value={color.fillOpacity}
                 onChange={(fillOpacity) =>
-                  onChange(
-                    setCategoryColor(overrides, category, { fillOpacity }),
-                  )
+                  setZoneColor(category, { fillOpacity })
                 }
                 label={`${label} opacity`}
               />
