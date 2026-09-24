@@ -20,11 +20,13 @@ export function App({ loader }: { loader: FloorPlanLoader }) {
       aria-label="Interactive floor plan kiosk"
     >
       {/* Inline so url(#liquid-glass) resolves against the document; from a
-          stylesheet the fragment reference breaks in production builds. */}
+          stylesheet the fragment reference breaks in production builds.
+          Only Chromium can use an SVG filter as a backdrop. Safari reads the
+          -webkit- line, which comes last, and gets the frosted blur alone. */}
       <style>{`.floating-panel,
       .kiosk-pin {
         backdrop-filter: blur(16px) saturate(1.4) url(#liquid-glass);
-        -webkit-backdrop-filter: blur(16px) saturate(1.4) url(#liquid-glass);
+        -webkit-backdrop-filter: blur(16px) saturate(1.4);
       }`}</style>
       <LiquidGlassFilter />
 
