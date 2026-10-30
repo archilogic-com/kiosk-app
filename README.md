@@ -104,6 +104,20 @@ Each file in `floor-plan/` follows a section of the [SDK guide](https://develope
 
 Wayfinding uses [`floorPlan.getPath({ start, end })`](https://developers.archilogic.com/floor-plan-engine/guide.html#get-path), available from `@archilogic/floor-plan-sdk` [5.5.0](https://developers.archilogic.com/floor-plan-engine/changelog.html#v5-5-0). The SDK loads its pathfinding engine on demand the first time a route is requested.
 
+## Trying an SDK preview
+
+Archilogic publishes pre-release builds of the SDK as the private package `@archilogic/floor-plan-sdk-preview`. To smoke-test one, install it under the public name in a throwaway checkout, so that neither `package.json` nor the lockfile ever carries the preview:
+
+```bash
+git worktree add --detach ../kiosk-app--preview
+cd ../kiosk-app--preview
+npm install
+npm i --no-save "@archilogic/floor-plan-sdk@npm:@archilogic/floor-plan-sdk-preview@0.0.0-snapshot-<datetime>"
+npm run typecheck && npm test && npm run test:e2e && npm run dev
+```
+
+The kiosk itself stays on the released range: this repository is public and its CI cannot install the private package.
+
 ## Commands
 
 ```bash
